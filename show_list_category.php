@@ -33,6 +33,11 @@
                     <td><?php echo $row['category_id'] ?></td>
                     <td><?php echo $row['category_name'] ?></td>
                     <td><?php echo $row['category_entrydate'] ?></td>
+
+                    <td>
+                        <a href="edit.php?id=<?php $row['category_id'] ?>">EDIT</a>
+                    </td>
+
                 </tr>
 
         <?php
