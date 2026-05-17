@@ -16,21 +16,21 @@ if ($conn->connect_error) {
 
 
 
+$sql = "CREATE DATABASE IF NOT EXISTS $dbname";
 
-// ৩. ডাটাবেস চেক করা এবং সিলেক্ট করা
-// এখানে select_db ফাংশনটি ডাটাবেস থাকলে সেটি সিলেক্ট করবে এবং TRUE রিটার্ন করবে।
-// '!' চিহ্ন দিয়ে আমরা বলছি- "যদি ডাটাবেস সিলেক্ট করা না যায় (অর্থাৎ না থাকে)"
-if (!$conn->select_db($dbname)) {
-    
-    // ডাটাবেস না থাকলে সেটি তৈরি করার SQL কমান্ড
-    $sql = "CREATE DATABASE IF NOT EXISTS $dbname";
-    
-    // SQL কমান্ডটি রান করা এবং চেক করা যে এটি সফল হয়েছে কি না
-    if ($conn->query($sql) === TRUE) {
-        // সফলভাবে তৈরি হলে সেটি ব্যবহারের জন্য সিলেক্ট করা
-        $conn->select_db($dbname);
+if ($conn->query($sql) === TRUE) {
+    $conn->select_db($dbname);
+
+    $table_sql = "CREATE TABLE IF NOT EXISTS category(
+        category_id INT AUTO_INCREMENT PRIMARY KEY,
+        category_name VARCHAR(255) NOT NULL,
+        category_entrydate DATE NOT NULL
+    )";
+    if ($conn->query($table_sql) === TRUE) {
+        echo "Table is ready!"; 
     } else {
-        // তৈরি করতে ব্যর্থ হলে এরর দেখানো
-        die("Error creating database: " . $conn->error);
+        die("Table creation failed: " . $conn->error);
     }
+} else {
+    die("Error Creating Data" . $conn->error);
 }
