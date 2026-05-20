@@ -34,10 +34,12 @@ $tables = [
     'product' => "CREATE TABLE IF NOT EXISTS product(
         product_id INT AUTO_INCREMENT PRIMARY KEY,
         product_name VARCHAR(255) NOT NULL,
-        product_price DECIMAL(10, 2) NOT NULL,
-        category_id INT,
-        FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET NULL
+        product_category INT NULL,
+        product_code VARCHAR(255) NOT NULL,
+        product_entrydate DATE NOT NULL,
+        FOREIGN KEY (product_category) REFERENCES category(category_id) ON DELETE SET NULL
     )"
+
     // ভবিষ্যতে আরও টেবিল লাগলে শুধু এখানে ১ লাইনে যুক্ত করে দেবেন!
 ];
 
