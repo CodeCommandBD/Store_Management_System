@@ -1,72 +1,90 @@
 <?php
-require_once('./sql_config.php');
+require_once("./sql_config.php");
+$error_msg = "";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['category_name']) && isset($_POST['category_entrydate'])) {
-        $id = $_GET['id'];
-        $category_name = $_POST['category_name'];
-        $category_entrydate = $_POST['category_entrydate'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['category_id'], $_POST['category_name'], $_POST['category_entrydate'])) {
+        $category_id = intval($_POST['category_id']);
+        $category_name = trim($_POST['category_name']);
+        $category_entrydate = trim($_POST['category_entrydate']);
 
-        $query = "UPDATE category SET category_name = ?, category_entrydate = ? 
-                  WHERE category_id= ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("ssi", $category_name, $category_entrydate, $id);
-
-        if($stmt->execute()){
-            header('location: show_list_category.php?msg=Record edit successfully');
+        if ($category_id > 0 && !empty($category_name) && !empty($category_entrydate)) {
+            $stmt = $conn->prepare("UPDATE category SET category_name = ?, category_entrydate = ? WHERE category_id = ?");
+            if ($stmt) {
+                $stmt->bind_param("ssi", $category_name, $category_entrydate, $category_id);
+                $success = $stmt->execute();
+                $stmt->close();
+                if ($success) {
+                    header("Location: show_list_category.php?msg=Record updated successfully");
+                    exit();
+                } else {
+                    $error_msg = "Table record update failed!";
+                }
+            } else {
+                $error_msg = "Failed to prepare statement.";
+            }
         } else {
-            header('location: show_list_category.php?msg=Failed to edit record');
+            $error_msg = "সবগুলো ঘর পূরণ করা বাধ্যতামূলক!";
         }
-
-        $stmt->close();
+    } else {
+        $error_msg = "Invalid request.";
     }
 }
 
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Category</title>
+    <title>Document</title>
 </head>
 
 <body>
-    <?php
-    if (isset($_GET['id'])) {
-        $id = $_GET['id'];
+<?php if (!empty($error_msg)) { ?>
+        <div style="color: red; margin: 10px 0;">
+            <?php echo htmlspecialchars($error_msg); ?>
+        </div>
+<?php } ?>
 
-
-        $query = "SELECT * FROM category WHERE category_id= ?";
-
-        $stmt = $conn->prepare($query);
-
+<?php
+$row = null;
+if (isset($_GET['id']) && ctype_digit($_GET['id'])) {
+    $id = intval($_GET['id']);
+    $stmt = $conn->prepare("SELECT * FROM category WHERE category_id = ?");
+    if ($stmt) {
         $stmt->bind_param("i", $id);
-
         $stmt->execute();
-
         $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-
-        if ($row) {
-
-    ?>
-            <form action="edit_category.php?id=<?php echo $row['category_id'] ?>" method="POST">
-                <label for="">Category Name:</label>
-                <input type="text" name="category_name" id="" placeholder="Category Name" value="<?php echo $row['category_name'] ?>">
-
-                <label for="">Category Entry Date:</label>
-                <input type="date" name="category_entrydate" id="" placeholder="Category Entry Date" value="<?php echo date('Y-m-d', strtotime($row['category_entrydate'])) ?>">
-                <button type="submit">update</button>
-            </form>
-
-    <?php
+        if ($result) {
+            $row = $result->fetch_assoc();
         }
+        $stmt->close();
     }
-    ?>
+}
+
+if ($row) {
+
+?>
+
+            <form action="edit_category.php" method="POST">
+                <input type="hidden" name="category_id" value="<?php echo htmlspecialchars($row['category_id']); ?>">
+                <label for="category_name">Category Name</label>
+                <input type="text" name="category_name" id="category_name" value="<?php echo htmlspecialchars($row['category_name']); ?>">
+                <label for="category_entrydate">Category EntryDate</label>
+                <input type="date" name="category_entrydate" id="category_entrydate" value="<?php echo htmlspecialchars($row['category_entrydate']); ?>">
+                <button type="submit">Update Category</button>
+            </form>
+<?php
+} else {
+    echo '<p>Category not found.</p>';
+}
+
+?>
+
+
 
 </body>
 
