@@ -1,65 +1,97 @@
-<?php 
-    require_once("./sql_config.php");
-    $error_msg="";
+<?php
+require_once("./sql_config.php");
+$error_msg = "";
 
-    if($_SERVER["REQUEST_METHOD"] === "POST"){
-        if(isset($_POST['category_name'], $_POST['category_entrydate'], $_POST['product_code'], $_POST['product_entrydate'])){
-            $category_name = trim($_POST['category_name']);
-            $category_entrydate = trim($_POST['category_entrydate']);
-            
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['product_name'], $_POST['product_category'], $_POST['product_code'], $_POST['product_entrydate'])) {
+        $product_name = trim($_POST['product_name']);
+        $product_category = trim($_POST['product_category']);
+        $product_code = trim($_POST['product_code']);
+        $product_entrydate = trim($_POST['product_entrydate']);
 
-            if(!empty($category_name) && !empty($category_entrydate)){
-                $stmt = $conn ->prepare("INSERT INTO category(category_name, category_entrydate)
-                            VALUES(?,?)
+        if (!empty($product_name) && !empty($product_category) && !empty($product_code) && !empty($product_entrydate)) {
+            $stmt = $conn->prepare("INSERT INTO product(product_name, product_category, product_code, product_entrydate)
+                            VALUES(?,?,?,?)
                 ");
-                $stmt -> bind_param("ss", $category_name, $category_entrydate);
+            $stmt->bind_param("ssss", $product_name, $product_category, $product_code, $product_entrydate);
 
-                $success = $stmt->execute();
-                $stmt->close();
-                if($success){
-                    header("location: show_list_category.php?msg=Table Record Creating Successfull!");
-                    exit();
-                }else{
-                    $error_msg ="Table Record creating Failed!";
-                }
-
-            }else{
-                $error_msg = "সবগুলো ঘর পূরণ করা বাধ্যতামূলক!";
+            $success = $stmt->execute();
+            $stmt->close();
+            if ($success) {
+                header("location: show_list_product.php?msg=Product Record Creating Successfull!");
+                exit();
+            } else {
+                $error_msg = "Product Record creating Failed!";
             }
+        } else {
+            $error_msg = "সবগুলো ঘর পূরণ করা বাধ্যতামূলক!";
         }
     }
+}
 
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Product</title>
 </head>
+
 <body>
-    <?php 
-        if(!empty($error_msg)){
+    <?php
+    if (!empty($error_msg)) {
 
     ?>
         <div style="color: red; margin: 10px 0;">
-            <?php echo htmlspecialchars($error_msg)?>
+            <?php echo htmlspecialchars($error_msg) ?>
         </div>
 
     <?php
-       }
-    ?>    
+    }
+    ?>
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST">
         <label for="">Product Name</label>
+        <br>
         <input type="text" name="product_name" id="">
+        <br>
+        <br>
         <label for="">Product Category</label>
-        <input type="text" name="product_category" id="">
+        <br>
+        <select name="product_category" id="">
+            <option value="">Select your category</option>
+            <?php
+            $show_sql = "SELECT * FROM category";
+            $run_sql = $conn->query($show_sql);
+
+            if ($run_sql->num_rows > 0) {
+                while ($row = $run_sql->fetch_assoc()) {
+            ?>
+                    <option value="<?php echo htmlspecialchars($row['category_id']) ?>">
+                        <?php echo htmlspecialchars($row['category_name']) ?>
+                    </option>
+
+            <?php
+                }
+            }
+            ?>
+        </select>
+        <br>
+        <br>
         <label for="">Product Code</label>
+        <br>
         <input type="text" name="product_code" id="">
+        <br>
+        <br>
         <label for="">Product EntryDate</label>
+        <br>
         <input type="date" name="product_entrydate" id="">
+        <br>
+        <br>
         <button type="submit">Add Product</button>
     </form>
 </body>
+
 </html>
