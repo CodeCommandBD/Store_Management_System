@@ -1,36 +1,49 @@
+
 <?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "store_db";
 
-$servername = 'localhost';
-$username = 'root';
-$password = '';
-$dbname = 'store_db';
 
-// ১. সার্ভারে কানেক্ট করা
 $conn = new mysqli($servername, $username, $password);
 
-// ২. কানেকশন সফল হয়েছে কি না তা চেক করা
 if ($conn->connect_error) {
-    die("Database Connection Failed: " . $conn->connect_error);
+    die("server connecting error" . $conn->connect_error);
+}
+
+
+$query = "CREATE DATABASE IF NOT EXISTS $dbname";
+
+if ($conn->query($query) === TRUE) {
+    $conn->select_db($dbname);
+} else {
+    die("Error Creating Database: " . $conn->error);
 }
 
 
 
-
-$sql = "CREATE DATABASE IF NOT EXISTS $dbname";
-
-if ($conn->query($sql) === TRUE) {
-    $conn->select_db($dbname);
-
-    $table_sql = "CREATE TABLE IF NOT EXISTS category(
+// ৩. 💡 সবগুলো টেবিল তৈরির কুয়েরি একটি ডাইনামিক অ্যারেতে রাখা
+$tables = [
+    'category' => "CREATE TABLE IF NOT EXISTS category(
         category_id INT AUTO_INCREMENT PRIMARY KEY,
         category_name VARCHAR(255) NOT NULL,
         category_entrydate DATE NOT NULL
-    )";
-    if ($conn->query($table_sql) === TRUE) {
-        echo "Table is ready!"; 
-    } else {
-        die("Table creation failed: " . $conn->error);
+    )",
+
+    'product' => "CREATE TABLE IF NOT EXISTS product(
+        product_id INT AUTO_INCREMENT PRIMARY KEY,
+        product_name VARCHAR(255) NOT NULL,
+        product_price DECIMAL(10, 2) NOT NULL,
+        category_id INT,
+        FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET NULL
+    )"
+    // ভবিষ্যতে আরও টেবিল লাগলে শুধু এখানে ১ লাইনে যুক্ত করে দেবেন!
+];
+
+// ৪. লুপের মাধ্যমে একবারে সব টেবিল তৈরি করা
+foreach ($tables as $tableName => $tableSql) {
+    if ($conn->query($tableSql) === FALSE) {
+        die("Error creating table '$tableName': " . $conn->error);
     }
-} else {
-    die("Error Creating Data" . $conn->error);
 }
