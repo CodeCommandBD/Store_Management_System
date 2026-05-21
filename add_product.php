@@ -4,32 +4,33 @@ $error_msg = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['product_name'], $_POST['product_category'], $_POST['product_code'], $_POST['product_entrydate'])) {
-        $product_name = trim($_POST['product_name']);
-        $product_category = trim($_POST['product_category']);
-        $product_code = trim($_POST['product_code']);
-        $product_entrydate = trim($_POST['product_entrydate']);
+        $product_name = sanitize_input($conn, $_POST['product_name']);
+        $product_category = sanitize_input($conn, $_POST['product_category']);
+        $product_code = sanitize_input($conn, $_POST['product_code']);
+        $product_entrydate = sanitize_input($conn, $_POST['product_entrydate']);
 
         if (!empty($product_name) && !empty($product_category) && !empty($product_code) && !empty($product_entrydate)) {
             $stmt = $conn->prepare("INSERT INTO product(product_name, product_category, product_code, product_entrydate)
                             VALUES(?,?,?,?)
                 ");
-            $stmt->bind_param("ssss", $product_name, $product_category, $product_code, $product_entrydate);
-
-            $success = $stmt->execute();
-            $stmt->close();
-            if ($success) {
-                header("location: show_list_product.php?msg=Product Record Creating Successfull!");
-                exit();
+            if ($stmt) {
+                $stmt->bind_param("ssss", $product_name, $product_category, $product_code, $product_entrydate);
+                $success = $stmt->execute();
+                $stmt->close();
+                if ($success) {
+                    header("location: show_list_product.php?msg=Product Record Creating Successfull!");
+                    exit();
+                } else {
+                    $error_msg = "Product Record creating Failed!";
+                }
             } else {
-                $error_msg = "Product Record creating Failed!";
+                $error_msg = "Database statement preparation failed!";
             }
         } else {
             $error_msg = "সবগুলো ঘর পূরণ করা বাধ্যতামূলক!";
         }
     }
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,17 +42,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 
 <body>
-    <?php
-    if (!empty($error_msg)) {
-
-    ?>
+    <?php if (!empty($error_msg)) { ?>
         <div style="color: red; margin: 10px 0;">
             <?php echo htmlspecialchars($error_msg) ?>
         </div>
+    <?php } ?>
 
-    <?php
-    }
-    ?>
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST">
         <label for="">Product Name</label>
         <br>
@@ -62,21 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <br>
         <select name="product_category" id="">
             <option value="">Select your category</option>
-            <?php
-            $show_sql = "SELECT * FROM category";
-            $run_sql = $conn->query($show_sql);
-
-            if ($run_sql->num_rows > 0) {
-                while ($row = $run_sql->fetch_assoc()) {
-            ?>
-                    <option value="<?php echo htmlspecialchars($row['category_id']) ?>">
-                        <?php echo htmlspecialchars($row['category_name']) ?>
-                    </option>
-
-            <?php
-                }
-            }
-            ?>
+            <?php echo get_dropdown_options($conn, 'category', 'category_id', 'category_name'); ?>
         </select>
         <br>
         <br>
