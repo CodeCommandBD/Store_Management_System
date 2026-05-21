@@ -45,6 +45,13 @@ $tables = [
         store_product_quantity INT NOT NULL,
         store_product_entrydate DATE NOT NULL,
         FOREIGN KEY (store_product_name) REFERENCES product(product_id) ON DELETE SET NULL
+    )",
+    'spend_product'=> "CREATE TABLE IF NOT EXISTS spend_product(
+        spend_product_id INT AUTO_INCREMENT PRIMARY KEY,
+        spend_product_name INT NULL,
+        spend_product_quantity INT NOT NULL,
+        spend_product_entrydate DATE NOT NULL,
+        FOREIGN KEY (spend_product_name) REFERENCES product(product_id) ON DELETE SET NULL
     )"
 
 ];
