@@ -52,7 +52,14 @@ $tables = [
         spend_product_quantity INT NOT NULL,
         spend_product_entrydate DATE NOT NULL,
         FOREIGN KEY (spend_product_name) REFERENCES product(product_id) ON DELETE SET NULL
-    )"
+    )",
+    'users' => "CREATE TABLE IF NOT EXISTS users(
+        user_id INT AUTO_INCREMENT PRIMARY KEY,
+        user_name VARCHAR(25) NOT NULL,
+        user_email VARCHAR(25) NOT NULL,
+        user_password VARCHAR(255) NOT NULL,
+        user_entrydate DATE NOT NULL
+    )",
 
 ];
 
@@ -62,6 +69,9 @@ foreach ($tables as $tableName => $tableSql) {
         die("Error creating table '$tableName': " . $conn->error);
     }
 }
+
+// নিশ্চিত করা যেন users টেবিলের password কলামটির সাইজ VARCHAR(255) হয় (যাতে হ্যাশ পাসওয়ার্ড কেটে না যায়)
+$conn->query("ALTER TABLE users MODIFY COLUMN user_password VARCHAR(255) NOT NULL");
 
 // ==========================================
 // 💡 reusable dynamic helper functions
@@ -94,4 +104,27 @@ if (!function_exists('get_dropdown_options')) {
         return $options;
     }
 }
+
+/**
+ * Dynamically inserts a record into a database table using prepared statements
+ */
+if (!function_exists('insert_record')) {
+    function insert_record($conn, $table, $data, $types) {
+        $fields = array_keys($data);
+        $placeholders = array_fill(0, count($fields), '?');
+        
+        $sql = "INSERT INTO $table (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $values = array_values($data);
+            $stmt->bind_param($types, ...$values);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        }
+        return false;
+    }
+}
+
 
